@@ -38,6 +38,8 @@ pub struct Model {
     pub geometries: Vec<TriMesh>,
     /// A list of [PbrMaterial]s applied to the geometries.
     pub materials: Vec<PbrMaterial>,
+    /// Optional extras from Gltf
+    pub extras: ::gltf::json::Extras
 }
 
 pub mod io;

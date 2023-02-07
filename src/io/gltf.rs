@@ -76,6 +76,7 @@ fn add_texture_dep<'a>(
 pub fn deserialize_gltf(raw_assets: &mut RawAssets, path: &PathBuf) -> Result<Model> {
     let mut cpu_meshes = Vec::new();
     let mut cpu_materials = Vec::new();
+    let mut cpu_extras: ::gltf::json::Extras = None;
 
     let Gltf { document, mut blob } = Gltf::from_slice(&raw_assets.remove(path)?)?;
     let base_path = path.parent().unwrap_or(Path::new(""));
@@ -102,6 +103,9 @@ pub fn deserialize_gltf(raw_assets: &mut RawAssets, path: &PathBuf) -> Result<Mo
 
     for scene in document.scenes() {
         for node in scene.nodes() {
+
+            cpu_extras = node.extras().to_owned();
+
             parse_tree(
                 &Mat4::identity(),
                 &node,
@@ -113,9 +117,12 @@ pub fn deserialize_gltf(raw_assets: &mut RawAssets, path: &PathBuf) -> Result<Mo
             )?;
         }
     }
+
+
     Ok(Model {
         geometries: cpu_meshes,
         materials: cpu_materials,
+        extras: cpu_extras
     })
 }
 
@@ -139,6 +146,7 @@ fn parse_tree<'a>(
             .name()
             .map(|s| s.to_string())
             .unwrap_or(format!("index {}", mesh.index()));
+
         for primitive in mesh.primitives() {
             let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
             if let Some(read_positions) = reader.read_positions() {
